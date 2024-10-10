@@ -1,0 +1,190 @@
+---
+title: "Comparative Analysis of TWICE and Stray Kids' Musical Evolution Using Spotify Data"
+author: 
+  - "Mandy He, Wendy Yuan"
+date: October 10, 2024
+date-format: long
+format: pdf
+abstract: "This study compares the musical evolution of TWICE and Stray Kids using data from [@spotify_api]. TWICE consistently shows higher valence, reflecting their upbeat style, while Stray Kids have a more varied and intense sound. These trends highlight their distinct artistic paths. The findings offer insight into their evolving roles in K-pop."
+toc: true
+number-sections: true
+bibliography: references.bib
+---
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+
+library(usethis)
+library(tidyverse)
+library(knitr)
+library(dplyr)
+library(devtools)
+devtools::install_github("charlie86/spotifyr")
+library(spotifyr)
+```
+
+\newpage
+
+# Introduction {#sec-introduction}
+
+The K-pop industry has experienced significant growth over the last decade, with many groups gaining global popularity. In our analysis, we will focus on two K-pop groups: TWICE (a female group) and Stray Kids (a male group). Both groups have unique styles that resonate with different audiences. Using data from the Spotify API [@spotify_api], we aim to explore how their music has evolved over time, particularly in terms of characteristics such as song duration and valence. By comparing these features with their respective album release dates, we hope to gain insights into their musical trajectories and artistic evolution.
+
+The paper is structured as follows: [@sec-methodology] discusses how the data was collected from Spotify API [@spotify_api]. [@sec-results] shows a graphical visualization of the data and explains some trends that can be seen. Next, [@sec-discussion] covers interpretations of the data from [@sec-results]. [@sec-conclusion] discusses the concluding remarks of this paper. Finally, [@sec-appendix] includes additional supporting data and [@sec-references] contains the references used in this paper.
+
+# Methodology {#sec-methodology}
+
+## Data Collection
+
+For this analysis, we used the Spotify API [@spotify_api] to extract data for TWICE and Stray Kids. Specifically, we retrieved the release dates, durations, and valence information for each track on their albums. Sample data for each group can be found in [@sec-appendix].
+
+The valence score, which ranges from 0.0 to 1.0, reflects the overall mood of a track. Higher values indicate happier or more positive-sounding music, while lower scores represent sadder or more negative moods. The duration variable measures how long the songs are, expressed in milliseconds. The release date variable indicates the year each particular album was released.
+
+The analysis was performed in R [@citeR] using several packages, including spotifyr [@spotifyr], usethis [@usethis], tidyverse [@tidyverse], dplyr [@dplyr], knitr [@knitr], and devtools [@devtools]. These packages allowed us to query Spotify's database for the audio features of each track and to create graphs and tables. ChatGPT (@ChatGPT) was used to help with the coding of the graphs.
+
+# Results {#sec-results}
+
+## Song Duration Analysis
+
+We plotted the song duration over time for both TWICE (see @fig-figure1) and Stray Kids (see @fig-figure2). The visualized trends suggest that the average duration of tracks for both groups has remained relatively consistent, with only minor fluctuations over time. There is no clear pattern indicating that either group has significantly increased or decreased the length of their songs as their catalogs have expanded. This observation suggests that song duration is more likely influenced by overall K-pop standards, which tend to favor shorter, radio-friendly tracks.
+
+```{r}
+#| warning: false
+#| message: false
+#| label: fig-figure1
+#| fig-cap: "TWICE Song Data Analysis"
+#| fig_caption: true
+#| echo: false
+
+twice_data <- get_artist_audio_features("twice")
+saveRDS(twice_data, "../data/twice_data.rds")
+twice <- readRDS("../data/twice_data.rds")
+
+twice <- as_tibble(twice)
+
+twice |>
+  mutate(album_release_date = ymd(album_release_date)) |>
+  ggplot(aes(
+    x = album_release_date,
+    y = duration_ms,
+    group = album_release_date
+  )) +
+  geom_boxplot() +
+  geom_jitter(alpha = 0.5, width = 0.3, height = 0) +
+  theme_minimal() +
+  labs(
+    x = "Album release date",
+    y = "Duration of song (ms)"
+  )
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| label: fig-figure2
+#| fig-cap: "Stray Kids Song Data Analysis"
+#| fig_caption: true
+#| echo: false
+
+straykids_data <- get_artist_audio_features('stray kids')
+saveRDS(straykids_data, "../data/straykids_data.rds")
+
+straykids <- readRDS("../data/straykids_data.rds")
+
+straykids <- as_tibble(straykids)
+
+straykids |>
+  mutate(album_release_date = ymd(album_release_date)) |>
+  ggplot(aes(
+    x = album_release_date,
+    y = duration_ms,
+    group = album_release_date
+  )) +
+  geom_boxplot() +
+  geom_jitter(alpha = 0.5, width = 0.3, height = 0) +
+  theme_minimal() +
+  labs(
+    x = "Album release date",
+    y = "Duration of song (ms)"
+  )
+```
+
+## Valence Analysis
+
+In @fig-figure3, we compare the valence scores of TWICE and Stray Kids across their respective release dates.
+
+TWICE: The analysis reveals a slight upward trend in valence for TWICE, particularly noticeable from 2017 to 2022. This suggests that TWICE has increasingly released tracks with a positive, happy vibe, aligning with their reputation for upbeat, bubblegum pop music. However, in more recent albums, the valence shows a slight decrease, indicating that TWICE may be experimenting with more mature sounds in some of their latest releases.
+
+Stray Kids: In contrast, Stray Kids exhibit a relatively consistent valence trend, with a slight downward shift in recent years. Their valence scores fluctuate between 0.5 and 0.75, reflecting both positive and more intense, serious moods. This aligns with their image as a group known for their harder-edged, experimental sound, often featuring themes of resilience and struggle.
+
+The comparison between the two groups highlights their differing artistic directions. While TWICE continues to lean towards upbeat, positive tracks, Stray Kids appears to be exploring more complex emotional themes.
+
+```{r}
+#| warning: false
+#| message: false
+#| label: fig-figure3
+#| fig-cap: "Comparing the Valence of TWICE vs Stray Kids songs"
+#| fig_caption: true
+#| echo: false
+
+rbind(twice, straykids) |>
+  select(artist_name, album_release_date, valence) |>
+  mutate(album_release_date = ymd(album_release_date)) |> 
+  ggplot(aes( x = album_release_date, y = valence, color = artist_name)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth() +
+  theme_minimal() +
+  facet_wrap(facets = vars(artist_name), dir = "v") +
+  labs(
+    x = "Album release date",
+    y = "Valence",
+    color = "Artist"
+  ) +
+  scale_color_brewer(palette = "Set1") +
+  theme(legend.position = "bottom")
+```
+
+# Discussion {#sec-discussion}
+
+The findings from this analysis provide insights into the musical evolution of both groups. TWICE, known for their catchy, bright songs, continues to produce music that aligns with their cheerful image, while also beginning to experiment with more nuanced emotions in their later releases. In contrast, Stray Kids remain true to their experimental and intense sound, showing a slight shift toward tracks with lower valence, which reflect more complex and darker emotional
+
+These observations align with the groups’ public personas: TWICE has evolved from youthful exuberance to a more versatile, mature sound, whereas Stray Kids are characterized by their innovative approach to music, often exploring themes of self-discovery and resilience.
+
+# Conclusion {#sec-conclusion}
+
+In this study, we utilized Spotify data to compare the musical characteristics of two K-pop groups, TWICE and Stray Kids. By analyzing song duration and valence across their albums, we found that TWICE has generally maintained a positive, high-valence trend, while Stray Kids consistently produce tracks that blend both positive and serious tones, showing a slight downward shift in valence in their more recent work. This comparative analysis sheds light on the evolving musical styles of both groups, reflecting their individual growth and artistic trajectories within the global K-pop landscape.
+
+\newpage
+
+# Appendix {#sec-appendix}
+
+```{r}
+#| warning: false
+#| message: false
+#| label: tbl-table1
+#| tbl-cap: "First 10 Observations of TWICE Song Analysis Data"
+#| echo: false
+
+twice %>%
+  select(artist_name, track_name, album_name, duration_ms, valence) %>%
+  head(10) %>%
+  kable()
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| label: tbl-table2
+#| tbl-cap: "First 10 Observations of Stray Kids Song Analysis Data"
+#| echo: false
+
+straykids %>%
+  select(artist_name, track_name, album_name, duration_ms, valence) %>%
+  head(10) %>%
+  kable()
+```
+
+\newpage
+
+# References {#sec-references}
