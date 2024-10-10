@@ -6,4 +6,4 @@ This paper compares the musical evolution of two K-pop groups, TWICE and Stray K
 
 ## Statement on LLM usage
 
-Aspects of the code and paper were written with the help of the ChatGPT 4o, specifically to help generate the graphs. Chat history is available in llm_usage.txt.
+Aspects of the code and paper were written with the help of the ChatGPT 4o, specifically to help generate the graphs and edit the writing in this paper. Chat history is available in llm_usage.txt.
